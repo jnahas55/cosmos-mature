@@ -4,8 +4,8 @@
     <cosmos-header></cosmos-header>
     <burguer-menu></burguer-menu>
 
-
     <security-view></security-view>
+    <data-stream-view></data-stream-view>
 
   </div>
 </template>
@@ -18,11 +18,13 @@
   import Sarasa from './components/Sarasa.vue'
   import Header from './components/Header.vue'
   import SecurityView from './components/SecurityView.vue'
+  import DataStreamView from './components/DataStreamView.vue'
 
   export default {
 
   name: 'App',
     components: {
+      'data-stream-view': DataStreamView,
       'security-view': SecurityView,
       'cosmos-header': Header,
       'burguer-menu': BurguerMenu,

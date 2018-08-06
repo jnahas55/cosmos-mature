@@ -74,11 +74,33 @@ export const store = new Vuex.Store({ // we need to export it to make it avaibla
     activeDataStream:[],
     dataStreams: [],
     dataStreamSelected: [],
+    displayLoadingFeedbackDataStreams: false,
 
+
+
+
+    elementsToDelete: [],
+
+
+
+//##########################################################################################
+// Pagination model
+//##########################################################################################
+
+    optionsOfEntriesPerPage:[
+      {id:0, value:5},
+      {id:1, value:10},
+      {id:2, value:15},
+      {id:3, value:20},
+    ],
+    currentPage: 1,
+    pagesNeeded: undefined,
+    elementsInCurrentPage: undefined,
 
 //##########################################################################################
 // Security model
 //##########################################################################################
+
     securityKey : '91c-xdy-w5w',
 
   },
@@ -100,6 +122,9 @@ export const store = new Vuex.Store({ // we need to export it to make it avaibla
 
       })
     },
+//##########################################################################################
+// Burguer menu mutations
+//##########################################################################################
 
     openNav: state => {
       state.sideNavStyle.backgroundColor = "#111";
@@ -127,12 +152,17 @@ export const store = new Vuex.Store({ // we need to export it to make it avaibla
       state.renderTriggerAddView = false;
       state.renderSecurityView = false;
       state.renderAboutView = false;
+
+      // Initially you should assume showing all data streams with no fitering
+      state.filteredDataStreams = state.dataStreamsConfigured;
+
+      //getPagesNeeded(state.filteredDataStreams, state.maxDataStreamsPerPage);
     },
 
     showActionView: state => {
       state.renderDashboardView = false;
       state.renderDataStreamView = false;
-      state.renderActionAddView = true;
+      state.reerAndctionAddView = true;
       state.renderTriggerAddView = false;
       state.renderSecurityView = false;
       state.renderAboutView = false;
@@ -163,7 +193,150 @@ export const store = new Vuex.Store({ // we need to export it to make it avaibla
       state.renderTriggerAddView = false;
       state.renderSecurityView = false;
       state.renderAboutView = true;
+    },
+
+//##########################################################################################
+// Pagination mutations
+//##########################################################################################
+
+    getPagesNeeded: (state, allExistingElements, maxPerPage) => {
+      console.log(" Existing elements length: " + allExistingElements.length);
+      console.log(" MaxPerPage: " + maxPerPage);
+      let pagesNeeded = allExistingElements.length / maxPerPage;
+      console.log(" pagesNeeded " + pagesNeeded);
+
+      // if number is int, that's it
+      if(pagesNeeded % 1 === 0){
+        state.pagesNeeded = pagesNeeded;
+      }
+      else{
+        // if not, we need the next since at least one element will be shown on the 'n' page
+        state.pagesNeeded = Math.ceil(pagesNeeded);
+      }
+    },
+
+    getPagesNeededFirstTimeForDataStream: state => {
+      let allExistingElements = state.filteredDataStreams;
+      let maxPerPage = state.maxDataStreamsPerPage;
+
+      console.log(" Existing elements length: " + allExistingElements.length);
+      console.log(" MaxPerPage: " + maxPerPage);
+
+      let pagesNeeded = allExistingElements.length / maxPerPage;
+
+      console.log(" pagesNeeded " + pagesNeeded);
+
+      // if number is int, that's it
+      if(pagesNeeded % 1 === 0){
+        state.pagesNeededForDataStreams= pagesNeeded;
+      }
+      else{
+        // if not, we need the next since at least one element will be shown on the 'n' page
+        state.pagesNeededForDataStreams = Math.ceil(pagesNeeded);
+      }
+    },
+
+    getElementsToShowInTable: (state, pageNumber, maxPerPage, elementsInCurrentPage, allElements)=> {
+      console.log(" Entering getElementsToShowInTable");
+
+      state.currentPage = pageNumber;
+      console.log("currentPage: "  + state.currentPage);
+
+      elementsInCurrentPage=[];
+
+      for (i=(state.currentPage-1)*maxPerPage; i<state.currentPage*maxPerPage; i++){
+
+        if(allElements[i] !== undefined){
+          elementsInCurrentPage.push(allElements[i]);
+          console.log("elementsInCurrentPage length " + elementsInCurrentPage.length);
+        }
+      }
+            state.elementsInCurrentPage = elementsInCurrentPage;
+
+    },
+
+
+    getElementsToShowInTableFirstTimeForDataStream: state => {
+      console.log(" Entering getElementsToShowInTable");
+      let pageNumber= 1;
+      let maxPerPage = state.maxDataStreamsPerPage;
+      let elementsInCurrentPage = [];
+      let allElements;
+      allElements = state.filteredDataStreams;
+
+      state.currentPage = pageNumber;
+      console.log("currentPage: "  + state.currentPage);
+
+      //elementsInCurrentPage=[];
+
+      for (let i=(state.currentPage-1)*maxPerPage; i<state.currentPage*maxPerPage; i++){
+
+        if(allElements[i] !== undefined){
+          elementsInCurrentPage.push(allElements[i]);
+          console.log("elementsInCurrentPage length " + elementsInCurrentPage.length);
+        }
+      }
+      state.dataStreamsForPage = elementsInCurrentPage;
+
+    },
+
+    displayPrevPage: (state, maxPerPage, elementsInCurrentPage, allElements) => {
+      console.log(" Entering displayPrevPage");
+      state.currentPage -= 1;
+
+      return state.commit('getElementsToShowInTable', state.currentPage, maxPerPage, elementsInCurrentPage, allElements);
+    },
+
+    displayNextPage: (state, maxPerPage, elementsInCurrentPage, allElements) => {
+      console.log(" Entering displayNextPage");
+      state.currentPage += 1;
+
+      return state.commit('getElementsToShowInTable', state.currentPage, maxPerPage, elementsInCurrentPage, allElements);
+    },
+
+//##########################################################################################
+// Datas Stream mutations
+//##########################################################################################
+
+    addElementToDeleteList: (state, elem) => {
+      console.log(" Entering addElementToDeleteList!");
+
+      console.log("elementsToDelete: " + state.elementsToDelete);
+      console.log("elem: " + elem);
+
+      //if already exists, delete it; add it otherwise
+      if (this.elementsToDelete.indexOf(elem.name) > -1) {
+        this.elementsToDelete.splice(state.elementsToDelete.indexOf(elem.name), 1);
+      } else {
+        this.elementsToDelete.push(elem.name);
+      }
+      console.log("elementsToDelete: " + state.elementsToDelete);
+      console.log("elem: " + elem);
+    },
+
+    showDataStream: (state, dataStream) => {
+      state.editDataStream = false;
+      state.activeDataStream = dataStream;
+    },
+
+    editDataStreams: (state, dataStream) => {
+      console.log(" Entering editDataStream");
+      console.log(" activeDataStream: " + state.activeDataStream);
+      state.activeDataStream = dataStream;
+      state.editDataStream = true;
+      console.log("activeDataStream: " + state.activeDataStream);
+
+    },
+
+    updateDataStreamsForPage: (state, value) => {
+      console.log(" Entering updateDataStreamsForPage");
+      state.dataStreamsForPage = value;
+    },
+
+    assignPagesNeededForDataStreams: state => {
+      state.pagesNeededForDataStreams = state.pagesNeeded;
     }
+
 
   },
 
@@ -192,17 +365,9 @@ export const store = new Vuex.Store({ // we need to export it to make it avaibla
 
       console.log("Entering showDataStreamView ");
 
-      // initially you should assume showing all data streams with no fitering
-      //this.filteredDataStreams = this.dataStreamsConfigured;
-
-      //this.pagesNeededForDataStreams = this.getPagesNeeded(this.filteredDataStreams, this.maxDataStreamsPerPage);
-
-      //console.log(" pagesNeededForDataStreams " + this.pagesNeededForDataStreams);
-
-      //this.dataStreamsForPage = this.getElementsToShowInTable(1, this.maxDataStreamsPerPage, this.dataStreamsForPage, this.filteredDataStreams);
-
       context.commit('showDataStreamView');
-
+      context.commit('getPagesNeededFirstTimeForDataStream');
+      context.commit('getElementsToShowInTableFirstTimeForDataStream');
     },
 
     showActionView: context =>{
@@ -246,7 +411,48 @@ export const store = new Vuex.Store({ // we need to export it to make it avaibla
     showAboutView: context =>{
       console.log("Entering showAboutView ");
       context.commit('showAboutView');
+    },
+
+    getPagesNeeded: (context, allExistingElements, maxPerPage) => {
+      console.log("Entering getPagesNeeded ");
+      context.commit('getPagesNeeded', allExistingElements, maxPerPage);
+    },
+
+    getElementsToShowInTable: (context, pageNumber, maxPerPage, elementsInCurrentPage, allElements) => {
+      console.log("Entering getElementsToShowInTable ");
+      context.commit('getElementsToShowInTable', pageNumber, maxPerPage, elementsInCurrentPage, allElements);
+    },
+
+    displayPrevPage: (context, maxPerPage, elementsInCurrentPage, allElements) => {
+      console.log("Entering displayPrevPage ");
+      context.commit('displayPrevPage', maxPerPage, elementsInCurrentPage, allElements);
+    },
+
+    displayNextPage: (context, maxPerPage, elementsInCurrentPage, allElements) => {
+      console.log("Entering displayNextPage ");
+      context.commit('displayNextPage', maxPerPage, elementsInCurrentPage, allElements);
+    },
+
+    addElementToDeleteList: (context, elem) => {
+      console.log("Entering addElementToDeleteList ");
+      context.commit('addElementToDeleteList', elem);
+    },
+
+    showDataStream: (context, dataStream) => {
+      console.log("Entering showDataStream ");
+      context.commit('showDataStream', dataStream);
+    },
+
+    editDataStreams: (context, dataStream) => {
+      console.log("Entering editDataStreams ");
+      context.commit('editDataStreams', dataStream);
+    },
+
+    updateDataStreamsForPage: (context, value) =>{
+      console.log("Entering updateDataStreamsForPage");
+      context.commit('updateDataStreamsForPage', value);
     }
+
   }
 })
 
