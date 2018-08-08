@@ -75,7 +75,7 @@
             <td>{{dataStream.name}}</td>
             <td>
               <button type="button" class="btn btn-success btn-sm" @click="showDataStream(dataStream)" data-toggle="modal" data-target="#editDataStreamModal" style="height: 75%;">
-                <i class="fa fa-eye"></i>
+                <i class="fa fa-bar-chart"></i>
               </button>
             </td>
             <td>
@@ -99,11 +99,11 @@
             <nav aria-label="Page navigation data streams">
               <ul class="pagination justify-content-end">
                 <li v-bind:class="[getCurrentPage() > 1 ? 'page-item': 'page-item disabled']">
-                  <a v-on:click="displayPrevPage(maxDataStreamsPerPage, dataStreamsForPage, filteredDataStreams)" class="page-link" href="#" tabindex="-1">Previous</a>
+                  <a @click="displayPrevPage()" class="page-link" href="#" tabindex="-1">Previous</a>
                 </li>
-                <li v-for="number in getPagesNeededForDataStreams()" v-bind:class="[getCurrentPage() === number ? 'page-item active': 'page-item']" v-on:click="getElementsToShowInTable(number, maxDataStreamsPerPage, dataStreamsForPage, filteredDataStreams)"><a class="page-link" href="#">{{number}}</a></li>
+                <li v-for="number in getPagesNeededForDataStreams()" v-bind:class="[getCurrentPage() === number ? 'page-item active': 'page-item']" @click="getElementsToShowInTable(number)"><a class="page-link" href="#">{{number}}</a></li>
                 <li v-bind:class="[getCurrentPage()<getPagesNeededForDataStreams() ? 'page-item': 'page-item disabled']">
-                  <a @click="displayNextPage(maxDataStreamsPerPage, dataStreamsForPage, filteredDataStreams)" class="page-link" href="#">Next</a>
+                  <a @click="displayNextPage()" class="page-link" href="#">Next</a>
                 </li>
               </ul>
             </nav>
@@ -129,14 +129,30 @@
   export default{
 
     computed:{
-      maxDataStreamsPerPage() {
-        return this.$store.state.maxDataStreamsPerPage;
+      maxDataStreamsPerPage: {
+        // getter
+        get: function () {
+          return this.$store.state.maxDataStreamsPerPage;
+        },
+        // setter
+        set: function (newValue) {
+          console.log("#### Entering maxDataStreamsPerPage watcher");
+          this.$store.dispatch('setMaxDataStreamsPerPage', newValue);
+        }
       },
       renderDataStreamView(){
         return this.$store.state.renderDataStreamView;
       },
-      dataStreamFilter(){
-        return this.$store.state.dataStreamFilter;
+      dataStreamFilter: {
+        // getter
+        get: function () {
+          return this.$store.state.dataStreamFilter;
+        },
+        // setter
+        set: function (newValue) {
+          console.log("#### Entering dataStreamFilter watcher");
+          this.$store.dispatch('filterDataStreamToDisplay', newValue);
+        }
       }
 
 
@@ -180,20 +196,22 @@
         return this.$store.state.pagesNeededForDataStreams;
       },
 
-      displayPrevPage: function (maxDataStreamsPerPage, dataStreamsForPage, filteredDataStreams) {
-          let prevElems = this.$store.state.dispatch('displayPrevPage', maxDataStreamsPerPage, dataStreamsForPage, filteredDataStreams);
-          this.$store.state.dispatch('updateDataStreamsForPage', prevElems);
+      displayPrevPage: function () {
+        this.$store.dispatch('displayPrevPageDataStream');
       },
 
-      displayNextPage: function (maxDataStreamsPerPage, dataStreamsForPage, filteredDataStreams) {
-        let nextElems = this.$store.state.dispatch('displayNextPage', maxDataStreamsPerPage, dataStreamsForPage, filteredDataStreams);
-        this.$store.state.dispatch('updateDataStreamsForPage', nextElems);
+      displayNextPage: function () {
+        this.$store.dispatch('displayNextPageDataStream');
       },
 
-      getElementsToShowInTable(number, maxDataStreamsPerPage, dataStreamsForPage, filteredDataStreams){
-        let currentElems = this.$store.state.dispatch('getElementsToShowInTable', number, maxDataStreamsPerPage, dataStreamsForPage, filteredDataStreams);
-        this.$store.state.dispatch('updateDataStreamsForPage', currentElems);
+      getElementsToShowInTable(number){
+        console.log("ENTERING WITH: " + number);
+        this.$store.dispatch('getDataStreamsToShowInTable', number);
       },
+/*
+      editDataStreams: function (dataStream) {
+        this.$store.dispatch('editDataStreams',dataStream);
+      },*/
 
 /*      addElementToDeleteList: function (dataStream) {
         this.$store.state.dispatch('updateDataStreamsForPage', currentElems);
@@ -208,7 +226,7 @@
       }*/
 
       ...mapActions([
-        'addElementToDeleteList', 'showDataStream', 'editDataStream'
+        'addElementToDeleteList', 'showDataStream', 'editDataStreams'
       ]),
 
   }

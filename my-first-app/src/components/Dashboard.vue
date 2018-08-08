@@ -1,5 +1,6 @@
 <template>
 
+  <!-- div for Dashboard view -->
   <div v-if="renderDashboardView" id="dashboard" style="margin: 1.5%;">
 
     <div class="row" style="font-family: sans-serif;">
@@ -114,6 +115,32 @@
 
 <script>
 
+export default {
+
+  mounted(){
+
+
+  },
+
+  computed:{
+    renderDashboardView(){
+      return this.$store.state.renderDashboardView;
+    },
+    displayLoadingFeedback(){
+      return this.$store.state.displayLoadingFeedback;
+    },
+    showAddDataStream(){
+      return this.$store.state.showAddDataStream;
+    },
+    dataStreams(){
+      return this.$store.state.dataStreams;
+    },
+  },
+
+  methods: {
+
+  }
+}
 
 </script>
 
